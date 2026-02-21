@@ -32,21 +32,24 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## MVP scope
 
-| Feature              | Status   | Notes                                      |
-|----------------------|----------|--------------------------------------------|
-| Code scan            | Scaffold | `src/lib/scanner/code-scanner.ts`          |
-| Browser screenshot   | Scaffold | `src/lib/browser/browser-runner.ts`        |
-| AI fix suggestions   | Scaffold | `src/lib/ai/suggest-fixes.ts`              |
-| PR creation          | Scaffold | `src/lib/pr/create-remediation-pr.ts`     |
-| Report generation    | Done     | JSON + HTML with disclaimer                 |
-| XRPL payment flow    | Done     | Quote + intent (testnet); verify stub       |
+| Feature              | Status | Notes                                              |
+|----------------------|--------|----------------------------------------------------|
+| Code scan            | Done   | eslint-plugin-jsx-a11y                             |
+| Browser screenshot   | Done   | Playwright + axe-core, screenshots per step        |
+| AI fix suggestions   | Done   | OpenAI (fallback to rule-based if no API key)      |
+| PR creation          | Done   | Octokit (GitHub); requires GITHUB_TOKEN            |
+| Report generation    | Done   | JSON + HTML with disclaimer                        |
+| XRPL payment flow    | Done   | Quote + intent + verify (testnet)                  |
 
 ## API
 
-- **POST /api/scan** — Start a scan (body: `{ target, ref?, type?: "code"|"browser"|"full" }`).
+- **POST /api/scan** — Start a scan (body: `{ target?, baseUrl?, type?: "code"|"browser"|"full", steps? }`). For browser/full, use `baseUrl` (e.g. http://localhost:3000).
 - **GET /api/report?jobId=…&format=json|html** — Get accessibility report.
+- **POST /api/suggest** — Get AI fix suggestions (body: `{ jobId }`).
+- **POST /api/pr** — Create remediation PR (body: `{ jobId, repo, baseBranch?, changes? }`). Requires `GITHUB_TOKEN`.
 - **GET /api/payment/quote?product=scan|report|remediation_credit&network=testnet|mainnet** — Get payment quote.
-- **POST /api/payment/intent** — Create payment intent (body: `{ product, destinationAddress, destinationTag?, network? }`).
+- **POST /api/payment/intent** — Create payment intent (body: `{ product, network? }`). Uses `XRPL_DESTINATION_ADDRESS` from env.
+- **POST /api/payment/verify** — Verify payment (body: `{ intentId, destinationAddress, amountDrops, network? }`).
 
 ## Project structure
 

@@ -3,6 +3,7 @@
  * Testnet supported for MVP.
  */
 
+import { Client } from "xrpl";
 import type {
   PaymentProduct,
   PaymentQuote,
@@ -62,17 +63,43 @@ export function createPaymentIntent(
 }
 
 /**
- * Verify payment on XRPL (check if destination received amount). MVP: stub.
+ * Verify payment on XRPL (check if destination received amount).
  */
 export async function verifyPayment(
-  intentId: string,
+  _intentId: string,
   destinationAddress: string,
   amountDrops: string,
   network: "testnet" | "mainnet" = "testnet"
 ): Promise<{ verified: boolean; txHash?: string }> {
-  // TODO: use xrpl.js to connect to network, look up account transactions
-  // or use WebSocket to listen for Payment transactions to destinationAddress
-  return { verified: false };
+  try {
+    const client = new Client(network === "testnet" ? TESTNET_WS : MAINNET_WS);
+    await client.connect();
+
+    const resp = await client.request({
+      command: "account_tx",
+      account: destinationAddress,
+      limit: 20,
+    });
+
+    await client.disconnect();
+
+    const txs = (resp.result as { transactions?: Array<{ tx?: { Amount?: string; Destination?: string }; hash?: string }> }).transactions ?? [];
+    const amountNum = BigInt(amountDrops);
+
+    for (const t of txs) {
+      const tx = t.tx;
+      if (!tx || tx.Destination !== destinationAddress) continue;
+      const amt = tx.Amount;
+      if (typeof amt === "string" && BigInt(amt) >= amountNum) {
+        return { verified: true, txHash: t.hash };
+      }
+    }
+
+    return { verified: false };
+  } catch (e) {
+    console.error("verifyPayment error:", e);
+    return { verified: false };
+  }
 }
 
 /**

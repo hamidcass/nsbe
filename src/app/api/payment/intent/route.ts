@@ -27,16 +27,17 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!destinationAddress || typeof destinationAddress !== "string") {
+    const dest = destinationAddress ?? process.env.XRPL_DESTINATION_ADDRESS;
+    if (!dest || typeof dest !== "string") {
       return NextResponse.json(
-        { error: "Missing destinationAddress" },
+        { error: "Missing destinationAddress. Set XRPL_DESTINATION_ADDRESS in .env or pass in body." },
         { status: 400 }
       );
     }
 
     const intent = createPaymentIntent(
       product,
-      destinationAddress,
+      dest,
       destinationTag,
       network
     );

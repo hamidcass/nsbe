@@ -10,8 +10,12 @@
     "scan": "tsx src/scripts/run-scan.ts"
   },
   "dependencies": {
+    "@axe-core/playwright": "^4.11.1",
+    "@octokit/rest": "^22.0.1",
     "axios": "^1.6.0",
     "next": "^14.2.0",
+    "openai": "^6.22.0",
+    "playwright": "^1.58.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "xrpl": "^4.6.0",

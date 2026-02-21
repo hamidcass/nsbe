@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { runCodeScan } from "../../../lib/scanner/code-scanner";
+import { saveJobResult } from "../../../lib/storage/job-store";
 import type { ScanType, ScanContext } from "../../../types";
+import type { FullScanResult } from "../../../types/scan";
 
 export const dynamic = "force-dynamic";
 
@@ -29,17 +31,25 @@ export async function POST(request: Request) {
     const jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
     if (type === "code" || type === "full") {
-      const result = await runCodeScan(jobId, {
+      const codeResult = await runCodeScan(jobId, {
         target,
         ref,
         context: defaultContext,
       });
 
+      const fullResult: FullScanResult = {
+        jobId,
+        codeScan: codeResult,
+        issues: codeResult.issues,
+        summary: codeResult.summary,
+      };
+      saveJobResult(fullResult);
+
       return NextResponse.json({
         jobId,
         status: "completed",
         type: "code",
-        result,
+        result: codeResult,
       });
     }
 
